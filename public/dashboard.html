@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Dashboard</title>
+    <link rel="stylesheet" href="./style.css">
+    <script>
+        // Function to add an offer
+        async function addOffer(event) {
+            event.preventDefault();
+
+            const shopName = document.getElementById("shopName").value;
+            const productName = document.getElementById("productName").value;
+            const price = document.getElementById("price").value;
+            const category = document.getElementById("category").value;
+            const offerError = document.getElementById("offerError");
+            const addOfferSpinner = document.getElementById("addOfferSpinner");
+
+            offerError.textContent = ""; // Clear previous errors
+            addOfferSpinner.style.display = "block"; // Show spinner
+
+            try {
+                const response = await fetch("/add-offer", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ shopName, productName, price, category }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert("Offer added successfully!");
+                    event.target.reset(); // Clear the form
+                    loadOffers(); // Reload the offers list
+                } else {
+                    offerError.textContent = result.error || "Failed to add offer.";
+                }
+            } catch (error) {
+                console.error("Error adding offer:", error);
+                offerError.textContent = "An error occurred while adding the offer.";
+            } finally {
+                addOfferSpinner.style.display = "none"; // Hide spinner
+            }
+        }
+
+        // Function to load offers
+        async function loadOffers() {
+            const offersList = document.getElementById("offersList");
+            const loadingSpinner = document.getElementById("loadingSpinner");
+
+            offersList.innerHTML = ""; // Clear the list
+            loadingSpinner.style.display = "block"; // Show spinner
+
+            try {
+                const response = await fetch("/offers");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch offers");
+                }
+
+                const offers = await response.json();
+                loadingSpinner.style.display = "none"; // Hide spinner
+
+                if (offers.length === 0) {
+                    offersList.innerHTML = "<p>No offers available.</p>";
+                    return;
+                }
+
+                offers.forEach((offer) => {
+                    const div = document.createElement("div");
+                    div.style.border = "1px solid #ddd";
+                    div.style.padding = "15px";
+                    div.style.marginBottom = "15px";
+                    div.style.borderRadius = "8px";
+                    div.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    div.style.transition = "transform 0.2s ease, box-shadow 0.2s ease";
+                    div.onmouseover = () => {
+                        div.style.transform = "translateY(-5px)";
+                        div.style.boxShadow = "0 6px 12px rgba(0, 0, 0, 0.2)";
+                    };
+                    div.onmouseout = () => {
+                        div.style.transform = "translateY(0)";
+                        div.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    };
+                    div.innerHTML = `
+                        <strong>${offer.productName}</strong> - ₹${offer.price} <br>
+                        <em>Category:</em> ${offer.category} <br>
+                        <em>Shop:</em> ${offer.shopName} <br>
+                        <button onclick="editOffer('${offer.id}')">Edit</button>
+                        <button onclick="deleteOffer('${offer.id}')">Delete</button>
+                    `;
+                    offersList.appendChild(div);
+                });
+            } catch (error) {
+                console.error("Error loading offers:", error);
+                loadingSpinner.style.display = "none"; // Hide spinner
+                offersList.innerHTML = "<p style='color: red;'>Failed to load offers. Please try again later.</p>";
+            }
+        }
+
+        // Function to delete an offer
+        async function deleteOffer(offerId) {
+            const confirmDelete = confirm("Are you sure you want to delete this offer?");
+            if (confirmDelete) {
+                try {
+                    const response = await fetch(`/delete-offer/${offerId}`, { method: "DELETE" });
+                    if (response.ok) {
+                        alert("Offer deleted successfully!");
+                        loadOffers(); // Reload the offers list
+                    } else {
+                        alert("Failed to delete offer. Please try again.");
+                    }
+                } catch (error) {
+                    console.error("Error deleting offer:", error);
+                    alert("An error occurred while deleting the offer.");
+                }
+            }
+        }
+
+        // Function to edit an offer (placeholder)
+        async function editOffer(offerId) {
+            alert(`Edit functionality for offer ID: ${offerId} is not implemented yet.`);
+        }
+
+        // Load offers when the page loads
+        window.onload = loadOffers;
+    </script>
+</head>
+<body>
+    <h1>Seller Dashboard</h1>
+
+    <!-- Add Offer Form -->
+    <h2>Add Offer</h2>
+    <form onsubmit="addOffer(event)">
+        <input type="text" id="shopName" placeholder="Shop Name" required>
+        <input type="text" id="productName" placeholder="Product Name" required>
+        <input type="number" id="price" placeholder="Price" required>
+        <input type="text" id="category" placeholder="Category" required>
+        <button type="submit">Add Offer</button>
+        <div id="offerError" style="color: red; margin-top: 10px;"></div>
+        <div id="addOfferSpinner" style="display: none; text-align: center;">
+            <img src="/shopping (1).webp" alt="Loading..." width="50">
+        </div>
+    </form>
+
+    <!-- Offers List -->
+    <h2>Your Offers</h2>
+    <div id="offersList"></div>
+    <div id="loadingSpinner" style="display: none; text-align: center;">
+        <img src="/shopping.webp" alt="Loading..." width="50">
+    </div>
+
+    <footer>
+        &copy; 2025 Super Mall. All rights reserved.
+    </footer>
+</body>
+</html>

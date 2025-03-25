@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyer Dashboard</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <h1>Buyer Dashboard</h1>
+
+    <!-- Filter Section -->
+    <section>
+        <h2>Filter Products</h2>
+        <label for="filterCategory">Category:</label>
+        <input type="text" id="filterCategory" placeholder="Enter category">
+        <label for="filterPrice">Max Price:</label>
+        <input type="number" id="filterPrice" placeholder="Enter max price">
+        <button onclick="filterProducts()">Apply Filter</button>
+    </section>
+
+    <!-- List of Shops -->
+    <section>
+        <h2>List of Shops</h2>
+        <ul id="shopList"></ul>
+    </section>
+
+    <!-- List of Offer Products -->
+    <section>
+        <h2>Products with Offers</h2>
+        <ul id="productsWithOffers"></ul>
+    </section>
+
+    <!-- Products without Offers -->
+    <section>
+        <h2>Products without Offers</h2>
+        <ul id="productsWithoutOffers"></ul>
+    </section>
+
+    <!-- Compare Products -->
+    <section>
+        <h2>Compare Products</h2>
+        <div id="comparisonTable"></div>
+    </section>
+
+    <!-- Shop-Wise Offers -->
+    <section>
+        <h2>Shop-Wise Offers</h2>
+        <label for="shopId">Enter Shop ID:</label>
+        <input type="text" id="shopId" placeholder="Enter shop ID">
+        <button onclick="loadShopOffers()">View Offers</button>
+        <ul id="shopOffersList"></ul>
+    </section>
+
+    <!-- Floor-Wise Offers -->
+    <section>
+        <h2>Floor-Wise Offers</h2>
+        <label for="floorName">Enter Floor Name:</label>
+        <input type="text" id="floorName" placeholder="Enter floor name">
+        <button onclick="loadFloorOffers()">View Offers</button>
+        <ul id="floorOffersList"></ul>
+    </section>
+
+    <!-- View Shop Details -->
+    <section>
+        <h2>View Shop Details</h2>
+        <label for="shopDetailsId">Enter Shop ID:</label>
+        <input type="text" id="shopDetailsId" placeholder="Enter shop ID">
+        <button onclick="viewShopDetails()">View Details</button>
+        <div id="shopDetails"></div>
+    </section>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" style="display: none; text-align: center;">
+        <img src="spinner.gif" alt="Loading..." width="50">
+    </div>
+
+    <footer>
+        &copy; 2025 Super Mall. All rights reserved.
+    </footer>
+
+    <script>
+        // Load products with and without offers
+        async function loadProducts() {
+            const offersList = document.getElementById("productsWithOffers");
+            const noOffersList = document.getElementById("productsWithoutOffers");
+            const loadingSpinner = document.getElementById("loadingSpinner");
+
+            offersList.innerHTML = "";
+            noOffersList.innerHTML = "";
+            loadingSpinner.style.display = "block"; // Show spinner
+
+            try {
+                // Fetch products with offers
+                const offersResponse = await fetch("/products-with-offers");
+                if (!offersResponse.ok) throw new Error("Failed to fetch products with offers");
+                const productsWithOffers = await offersResponse.json();
+                productsWithOffers.forEach((product) => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <strong>${product.name}</strong> - ₹${product.price} <br>
+                        <em>Category:</em> ${product.category} <br>
+                        <img src="${product.image}" alt="${product.name}" width="100" loading="lazy"><br>
+                        <button onclick="addToCart('${product.id}')">Add to Cart</button>
+                    `;
+                    offersList.appendChild(li);
+                });
+
+                // Fetch products without offers
+                const noOffersResponse = await fetch("/products-without-offers");
+                if (!noOffersResponse.ok) throw new Error("Failed to fetch products without offers");
+                const productsWithoutOffers = await noOffersResponse.json();
+                productsWithoutOffers.forEach((product) => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <strong>${product.name}</strong> - ₹${product.price} <br>
+                        <em>Category:</em> ${product.category} <br>
+                        <img src="${product.image}" alt="${product.name}" width="100" loading="lazy"><br>
+                        <button onclick="addToCart('${product.id}')">Add to Cart</button>
+                    `;
+                    noOffersList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error loading products:", error);
+                offersList.innerHTML = `<p style='color: red;'>Failed to load products with offers. Please try again later.</p>`;
+                noOffersList.innerHTML = `<p style='color: red;'>Failed to load products without offers. Please try again later.</p>`;
+            } finally {
+                loadingSpinner.style.display = "none"; // Hide spinner
+            }
+        }
+
+        // Add product to cart
+        async function addToCart(productId) {
+            try {
+                const response = await fetch("/add-to-cart", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ productId }),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert("Product added to cart!");
+                } else {
+                    alert(result.error || "Failed to add to cart");
+                }
+            } catch (error) {
+                console.error("Error adding to cart:", error);
+            }
+        }
+
+        // Filter products by category and price
+        async function filterProducts() {
+            const category = document.getElementById("filterCategory").value;
+            const maxPrice = document.getElementById("filterPrice").value;
+
+            console.log(`Filtering products by category: ${category}, max price: ${maxPrice}`);
+        }
+
+        // Load shop-specific offers
+        async function loadShopOffers() {
+            const shopId = document.getElementById("shopId").value;
+            const shopOffersList = document.getElementById("shopOffersList");
+
+            try {
+                const response = await fetch(`/shop-offers/${shopId}`);
+                if (!response.ok) throw new Error("Failed to fetch shop offers");
+                const offers = await response.json();
+                shopOffersList.innerHTML = "";
+                offers.forEach((offer) => {
+                    const li = document.createElement("li");
+                    li.textContent = `${offer.productName} - ₹${offer.price}`;
+                    shopOffersList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error loading shop offers:", error);
+                shopOffersList.innerHTML = `<p style='color: red;'>Failed to load shop offers. Please try again later.</p>`;
+            }
+        }
+
+        // Load floor-specific offers
+        async function loadFloorOffers() {
+            const floorName = document.getElementById("floorName").value;
+            const floorOffersList = document.getElementById("floorOffersList");
+
+            try {
+                const response = await fetch(`/floor-offers/${floorName}`);
+                if (!response.ok) throw new Error("Failed to fetch floor offers");
+                const offers = await response.json();
+                floorOffersList.innerHTML = "";
+                offers.forEach((offer) => {
+                    const li = document.createElement("li");
+                    li.textContent = `${offer.productName} - ₹${offer.price}`;
+                    floorOffersList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error loading floor offers:", error);
+                floorOffersList.innerHTML = `<p style='color: red;'>Failed to load floor offers. Please try again later.</p>`;
+            }
+        }
+
+        // View shop details
+        async function viewShopDetails() {
+            const shopDetailsId = document.getElementById("shopDetailsId").value;
+            const shopDetails = document.getElementById("shopDetails");
+
+            try {
+                const response = await fetch(`/shop-details/${shopDetailsId}`);
+                if (!response.ok) throw new Error("Failed to fetch shop details");
+                const details = await response.json();
+                shopDetails.innerHTML = `
+                    <p><strong>Shop Name:</strong> ${details.name}</p>
+                    <p><strong>Location:</strong> ${details.location}</p>
+                    <p><strong>Owner:</strong> ${details.owner}</p>
+                `;
+            } catch (error) {
+                console.error("Error viewing shop details:", error);
+                shopDetails.innerHTML = `<p style='color: red;'>Failed to load shop details. Please try again later.</p>`;
+            }
+        }
+
+        // Load products when the page loads
+        window.onload = loadProducts;
+    </script>
+</body>
+</html>

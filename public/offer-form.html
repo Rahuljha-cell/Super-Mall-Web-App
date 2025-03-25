@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Offer</title>
+  <link rel="stylesheet" href="./style.css">
+  <script>
+    // Function to handle form submission
+    document.addEventListener("DOMContentLoaded", () => {
+      const offerForm = document.getElementById("offer-form");
+      const offerError = document.getElementById("offer-error");
+      const loadingSpinner = document.getElementById("loadingSpinner");
+
+      offerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const shopName = document.getElementById("shopName").value;
+        const product = document.getElementById("product").value;
+        const price = document.getElementById("price").value;
+        const category = document.getElementById("category").value;
+
+        offerError.textContent = ""; // Clear previous errors
+        offerError.style.color = "red"; // Reset error color
+        loadingSpinner.style.display = "block"; // Show loading spinner
+        const submitButton = offerForm.querySelector("button[type='submit']");
+        submitButton.disabled = true; // Disable submit button
+
+        try {
+          const response = await fetch("/add-offer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ shopName, product, price, category }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            offerError.style.color = "green";
+            offerError.textContent = "Offer added successfully!";
+            offerForm.reset(); // Clear the form
+          } else {
+            offerError.textContent = result.error || "Failed to add offer.";
+          }
+        } catch (error) {
+          console.error("Error adding offer:", error);
+          offerError.textContent = "An error occurred while adding the offer.";
+        } finally {
+          loadingSpinner.style.display = "none"; // Hide loading spinner
+          submitButton.disabled = false; // Re-enable submit button
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Add New Offer</h1>
+  </header>
+
+  <main>
+    <!-- Offer Form Section -->
+    <section>
+      <form id="offer-form">
+        <label for="shopName">Shop Name:</label>
+        <input type="text" id="shopName" name="shopName" placeholder="Enter shop name" aria-label="Shop Name" required>
+
+        <label for="product">Product Name:</label>
+        <input type="text" id="product" name="product" placeholder="Enter product name" aria-label="Product Name" required>
+
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price" placeholder="Enter price" aria-label="Price" required>
+
+        <label for="category">Category:</label>
+        <input type="text" id="category" name="category" placeholder="Enter category" aria-label="Category" required>
+
+        <div id="offer-error" style="color: red; margin-top: 10px;" aria-live="polite"></div>
+        <div id="loadingSpinner" style="display: none; text-align: center; margin-top: 10px;">
+          <img src="spinner.gif" alt="Loading..." width="50">
+        </div>
+
+        <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;" aria-label="Add Offer">
+          Add Offer
+        </button>
+      </form>
+    </section>
+
+    <!-- Back to Dashboard Button -->
+    <section>
+      <button id="backToDashboard" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;" aria-label="Back to Dashboard">
+        Back to Dashboard
+      </button>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Supermall App</p>
+  </footer>
+
+  <script>
+    // Navigate back to the seller dashboard
+    document.getElementById("backToDashboard").addEventListener("click", () => {
+      window.location.href = "sellerdashboard.html"; // Corrected the path
+    });
+  </script>
+</body>
+</html>

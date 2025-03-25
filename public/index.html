@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mall - Login & Signup</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <h1>Welcome to Super Mall</h1>
+
+    <!-- Login Section -->
+    <div class="form-container">
+        <h2>Login</h2>
+        <form id="login-form">
+            <input type="email" name="email" id="login-email" placeholder="Email" aria-label="Email" required>
+            <input type="password" name="password" id="login-password" placeholder="Password" aria-label="Password" required>
+            <button type="submit" aria-label="Login">Login</button>
+        </form>
+        <div id="login-error" style="color: red; margin-top: 10px;"></div>
+        <div id="loading" style="display: none; color: blue; margin-top: 10px;">Logging in...</div>
+    </div>
+
+    <!-- Signup Section -->
+    <div class="form-container">
+        <h2>Signup</h2>
+        <form id="signup-form">
+            <input type="email" name="email" id="signup-email" placeholder="Email" aria-label="Email" required>
+            <input type="password" name="password" id="signup-password" placeholder="Password" aria-label="Password" required>
+            <select name="role" id="signup-role" aria-label="Role" required>
+                <option value="seller">Seller</option>
+                <option value="buyer">Buyer</option>
+            </select>
+            <button type="submit" aria-label="Signup">Signup</button>
+        </form>
+        <div id="signup-error" style="color: red; margin-top: 10px;"></div>
+        <div id="signup-loading" style="display: none; color: blue; margin-top: 10px;">Signing up...</div>
+    </div>
+
+    <footer>
+        &copy; 2025 Super Mall. All rights reserved.
+    </footer>
+
+    <script>
+        // Handle Login Form Submission
+        document.getElementById("login-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById("login-email").value;
+            const password = document.getElementById("login-password").value;
+
+            const loginError = document.getElementById("login-error");
+            const loading = document.getElementById("loading");
+
+            try {
+                loginError.textContent = ""; // Clear previous errors
+                loading.style.display = "block"; // Show loading message
+
+                const response = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const result = await response.json();
+                loading.style.display = "none"; // Hide loading message
+
+                if (response.ok) {
+                    alert(result.message);
+                    if (result.role === "seller") {
+                        window.location.href = "/dashboard"; // Redirect to seller dashboard
+                    } else {
+                        window.location.href = "/products"; // Redirect to buyer products page
+                    }
+                } else {
+                    loginError.textContent = result.error || "Login failed";
+                }
+            } catch (error) {
+                loading.style.display = "none"; // Hide loading message
+                console.error("Error during login:", error);
+                loginError.textContent = "An error occurred during login.";
+            }
+        });
+
+        // Handle Signup Form Submission
+        document.getElementById("signup-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById("signup-email").value;
+            const password = document.getElementById("signup-password").value;
+            const role = document.getElementById("signup-role").value;
+
+            const signupError = document.getElementById("signup-error");
+            const signupLoading = document.getElementById("signup-loading");
+
+            try {
+                signupError.textContent = ""; // Clear previous errors
+                signupLoading.style.display = "block"; // Show loading message
+
+                const response = await fetch("/signup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password, role }),
+                });
+
+                const result = await response.json();
+                signupLoading.style.display = "none"; // Hide loading message
+
+                if (response.ok) {
+                    alert(result.message);
+                    window.location.href = "/"; // Redirect to login page after successful signup
+                } else {
+                    signupError.textContent = result.error || "Signup failed";
+                }
+            } catch (error) {
+                signupLoading.style.display = "none"; // Hide loading message
+                console.error("Error during signup:", error);
+                signupError.textContent = "An error occurred during signup.";
+            }
+        });
+    </script>
+</body>
+</html>

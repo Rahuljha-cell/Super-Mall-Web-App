@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <link rel="stylesheet" href="./style.css">
+    <script>
+        // Function to display products
+        async function displayProducts() {
+            const offersList = document.getElementById("offersList");
+            const productError = document.getElementById("productError");
+            const loading = document.getElementById("loading");
+
+            offersList.innerHTML = ""; // Clear the list
+            productError.textContent = ""; // Clear previous errors
+            loading.style.display = "block"; // Show loading spinner
+
+            try {
+                const response = await fetch("/products");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch products");
+                }
+
+                const products = await response.json();
+                loading.style.display = "none"; // Hide loading spinner
+
+                if (products.length === 0) {
+                    offersList.innerHTML = "<p>No products available.</p>";
+                    return;
+                }
+
+                products.forEach((product) => {
+                    const li = document.createElement("li");
+                    li.style.border = "1px solid #ddd";
+                    li.style.padding = "15px";
+                    li.style.marginBottom = "15px";
+                    li.style.borderRadius = "8px";
+                    li.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    li.style.transition = "transform 0.2s ease, box-shadow 0.2s ease";
+                    li.onmouseover = () => {
+                        li.style.transform = "translateY(-5px)";
+                        li.style.boxShadow = "0 6px 12px rgba(0, 0, 0, 0.2)";
+                    };
+                    li.onmouseout = () => {
+                        li.style.transform = "translateY(0)";
+                        li.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    };
+                    li.innerHTML = `
+                        <strong>${product.name}</strong> - ₹${product.price} <br>
+                        <em>Category:</em> ${product.category} <br>
+                        <em>Seller:</em> ${product.seller} <br>
+                        <img src="${product.image}" alt="Image of ${product.name}" width="100">
+                    `;
+                    offersList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error loading products:", error);
+                loading.style.display = "none"; // Hide loading spinner
+                productError.textContent = "Failed to load products. Please try again later.";
+            }
+        }
+
+        // Function to search products
+        async function searchProducts() {
+            const searchInput = document.getElementById("searchInput").value.toLowerCase();
+            const offersList = document.getElementById("offersList");
+            const productError = document.getElementById("productError");
+
+            offersList.innerHTML = ""; // Clear the list
+            productError.textContent = ""; // Clear previous errors
+
+            try {
+                const response = await fetch(`/products?search=${encodeURIComponent(searchInput)}`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch products");
+                }
+
+                const products = await response.json();
+
+                if (products.length === 0) {
+                    offersList.innerHTML = "<p>No products found.</p>";
+                    return;
+                }
+
+                products.forEach((product) => {
+                    const li = document.createElement("li");
+                    li.style.border = "1px solid #ddd";
+                    li.style.padding = "15px";
+                    li.style.marginBottom = "15px";
+                    li.style.borderRadius = "8px";
+                    li.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    li.innerHTML = `
+                        <strong>${product.name}</strong> - ₹${product.price} <br>
+                        <em>Category:</em> ${product.category} <br>
+                        <em>Seller:</em> ${product.seller} <br>
+                        <img src="${product.image}" alt="Image of ${product.name}" width="100">
+                    `;
+                    offersList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error searching products:", error);
+                productError.textContent = "Failed to search products. Please try again later.";
+            }
+        }
+
+        // Load products when the page loads
+        window.onload = displayProducts;
+    </script>
+</head>
+<body>
+    <h1>Available Products</h1>
+
+    <!-- Search Bar -->
+    <div style="text-align: center; margin-bottom: 20px;">
+        <input type="text" id="searchInput" placeholder="Search products..." aria-label="Search products" style="padding: 10px; width: 80%; max-width: 300px; border: 1px solid #ccc; border-radius: 4px;">
+        <button onclick="searchProducts()" aria-label="Search" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Search</button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" style="text-align: center; margin: 20px;">
+        <img src="spinner.gif" alt="Loading..." width="50">
+    </div>
+
+    <!-- Products List -->
+    <ul id="offersList"></ul>
+    <div id="productError" style="color: red; font-weight: bold; margin-top: 10px;" aria-live="polite"></div>
+
+    <!-- Footer -->
+    <footer>
+        &copy; 2025 Super Mall. All rights reserved.
+    </footer>
+</body>
+</html>

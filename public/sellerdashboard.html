@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Dashboard</title>
+    <link rel="stylesheet" href="./style.css">
+    <script>
+        // Load Offers
+        async function loadOffers() {
+            const offersList = document.getElementById("offersList");
+            const loading = document.getElementById("loading");
+            loading.style.display = "block"; // Show loading spinner
+            offersList.innerHTML = ""; // Clear the list
+
+            try {
+                const response = await fetch("/offers");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch offers.");
+                }
+
+                const offers = await response.json();
+                loading.style.display = "none"; // Hide loading spinner
+
+                if (offers.length === 0) {
+                    offersList.innerHTML = "<p>No offers available.</p>";
+                    return;
+                }
+
+                offers.forEach((offer) => {
+                    const li = document.createElement("li");
+                    li.style.border = "1px solid #ddd";
+                    li.style.padding = "15px";
+                    li.style.marginBottom = "15px";
+                    li.style.borderRadius = "8px";
+                    li.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    li.style.transition = "transform 0.2s ease, box-shadow 0.2s ease";
+                    li.onmouseover = () => {
+                        li.style.transform = "translateY(-5px)";
+                        li.style.boxShadow = "0 6px 12px rgba(0, 0, 0, 0.2)";
+                    };
+                    li.onmouseout = () => {
+                        li.style.transform = "translateY(0)";
+                        li.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    };
+                    li.innerHTML = `
+                        <strong>${offer.name}</strong> - ₹${offer.price} <br>
+                        <em>Category:</em> ${offer.category} <br>
+                        <img src="${offer.image}" alt="${offer.name}" width="100"><br>
+                        <button onclick="deleteOffer('${offer.id}')">Delete</button>
+                    `;
+                    offersList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error loading offers:", error);
+                loading.style.display = "none"; // Hide loading spinner
+                offersList.innerHTML = "<p style='color: red;'>Failed to load offers. Please try again later.</p>";
+            }
+        }
+
+        // Delete Offer
+        async function deleteOffer(offerId) {
+            const confirmDelete = confirm("Are you sure you want to delete this offer?");
+            if (confirmDelete) {
+                try {
+                    const response = await fetch(`/delete-offer/${offerId}`, { method: "DELETE" });
+                    if (response.ok) {
+                        alert("Offer deleted successfully!");
+                        loadOffers(); // Reload the offers list
+                    } else {
+                        alert("Failed to delete offer. Please try again.");
+                    }
+                } catch (error) {
+                    console.error("Error deleting offer:", error);
+                    alert("An error occurred while deleting the offer.");
+                }
+            }
+        }
+
+        // Add Product
+        async function addProduct(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+
+            try {
+                const response = await fetch("/add-product", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    alert("Product added successfully!");
+                    event.target.reset(); // Clear the form
+                    loadOffers(); // Reload the offers list
+                } else {
+                    const result = await response.json();
+                    alert(result.error || "Failed to add product.");
+                }
+            } catch (error) {
+                console.error("Error adding product:", error);
+                alert("An error occurred while adding the product.");
+            }
+        }
+
+        // Add Shop
+        async function addShop(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+
+            try {
+                const response = await fetch("/add-shop", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    alert("Shop added successfully!");
+                    event.target.reset(); // Clear the form
+                    loadShops(); // Reload the shop list
+                } else {
+                    const result = await response.json();
+                    alert(result.error || "Failed to add shop.");
+                }
+            } catch (error) {
+                console.error("Error adding shop:", error);
+                alert("An error occurred while adding the shop.");
+            }
+        }
+
+        // Load Shops
+        async function loadShops() {
+            const shopList = document.getElementById("shopList");
+            shopList.innerHTML = "<p>Loading shops...</p>";
+
+            try {
+                const response = await fetch("/shops");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch shops.");
+                }
+
+                const shops = await response.json();
+                shopList.innerHTML = ""; // Clear the loading message
+
+                if (shops.length === 0) {
+                    shopList.innerHTML = "<p>No shops available.</p>";
+                    return;
+                }
+
+                shops.forEach((shop) => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <strong>${shop.name}</strong> - ${shop.floor} <br>
+                        <em>Category:</em> ${shop.category} <br>
+                        <button onclick="deleteShop('${shop.id}')">Delete</button>
+                    `;
+                    shopList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error loading shops:", error);
+                shopList.innerHTML = "<p style='color: red;'>Failed to load shops. Please try again later.</p>";
+            }
+        }
+
+        // Delete Shop
+        async function deleteShop(shopId) {
+            const confirmDelete = confirm("Are you sure you want to delete this shop?");
+            if (confirmDelete) {
+                try {
+                    const response = await fetch(`/delete-shop/${shopId}`, { method: "DELETE" });
+                    if (response.ok) {
+                        alert("Shop deleted successfully!");
+                        loadShops(); // Reload the shop list
+                    } else {
+                        alert("Failed to delete shop. Please try again.");
+                    }
+                } catch (error) {
+                    console.error("Error deleting shop:", error);
+                    alert("An error occurred while deleting the shop.");
+                }
+            }
+        }
+
+        // Initialize the dashboard
+        window.onload = () => {
+            loadOffers();
+            loadShops();
+        };
+    </script>
+</head>
+<body>
+    <h1>Seller Dashboard</h1>
+
+    <!-- Add Product Form -->
+    <form onsubmit="addProduct(event)" enctype="multipart/form-data">
+        <h2>Add Product</h2>
+        <input type="text" name="name" placeholder="Product Name" required>
+        <input type="number" name="price" placeholder="Price" required>
+        <input type="text" name="category" placeholder="Category" required>
+        <input type="file" name="image" required>
+        <button type="submit">Add Product</button>
+    </form>
+
+    <!-- Add Shop Form -->
+    <form onsubmit="addShop(event)">
+        <h2>Add Shop</h2>
+        <input type="text" name="name" placeholder="Shop Name" required>
+        <input type="text" name="floor" placeholder="Floor" required>
+        <input type="text" name="category" placeholder="Category" required>
+        <button type="submit">Add Shop</button>
+    </form>
+
+    <!-- Shop List -->
+    <h2>Your Shops</h2>
+    <ul id="shopList"></ul>
+
+    <!-- Offers List -->
+    <h2>Your Offers</h2>
+    <div id="loading" style="text-align: center; margin: 20px;">
+        <img src="spinner.gif" alt="Loading..." width="50">
+    </div>
+    <ul id="offersList"></ul>
+
+    <!-- Logout Button -->
+    <button id="logoutButton" onclick="logout()">Logout</button>
+
+    <script>
+        // Logout Functionality
+        function logout() {
+            fetch("/logout", { method: "POST" })
+                .then(() => {
+                    alert("Logged out successfully!");
+                    window.location.href = "index.html"; // Redirect to login page
+                })
+                .catch((error) => {
+                    console.error("Error logging out:", error);
+                    alert("Failed to log out. Please try again.");
+                });
+        }
+    </script>
+</body>
+</html>
