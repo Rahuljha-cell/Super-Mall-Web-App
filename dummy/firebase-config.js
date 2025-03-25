@@ -4,12 +4,12 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCvrAWpdJWVRYnDpMcnr6suDSyu_1Tzvso",
-  authDomain: "super-mall-1f4d7.firebaseapp.com",
-  projectId: "super-mall-1f4d7",
-  storageBucket: "super-mall-1f4d7.firebasestorage.app",
-  messagingSenderId: "287378421143",
-  appId: "1:287378421143:web:eb89e78a68ebc22bc200d2",
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
 };
 
 // Initialize Firebase
